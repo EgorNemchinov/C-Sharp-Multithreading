@@ -8,4 +8,8 @@
 !.vscode/extensions.json
 .history
 
+Debug/
+bin/
+obj/
+
 # End of https://www.gitignore.io/api/visualstudiocode
