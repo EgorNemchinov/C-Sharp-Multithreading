@@ -1,0 +1,10 @@
+/home/luna/Prgr/C#/SeaSharkMultiverse/bin/Debug/netcoreapp2.0/SeaSharkMultiverse.deps.json
+/home/luna/Prgr/C#/SeaSharkMultiverse/bin/Debug/netcoreapp2.0/SeaSharkMultiverse.runtimeconfig.json
+/home/luna/Prgr/C#/SeaSharkMultiverse/bin/Debug/netcoreapp2.0/SeaSharkMultiverse.runtimeconfig.dev.json
+/home/luna/Prgr/C#/SeaSharkMultiverse/bin/Debug/netcoreapp2.0/SeaSharkMultiverse.dll
+/home/luna/Prgr/C#/SeaSharkMultiverse/bin/Debug/netcoreapp2.0/SeaSharkMultiverse.pdb
+/home/luna/Prgr/C#/SeaSharkMultiverse/obj/Debug/netcoreapp2.0/SeaSharkMultiverse.csproj.CoreCompileInputs.cache
+/home/luna/Prgr/C#/SeaSharkMultiverse/obj/Debug/netcoreapp2.0/SeaSharkMultiverse.AssemblyInfoInputs.cache
+/home/luna/Prgr/C#/SeaSharkMultiverse/obj/Debug/netcoreapp2.0/SeaSharkMultiverse.AssemblyInfo.cs
+/home/luna/Prgr/C#/SeaSharkMultiverse/obj/Debug/netcoreapp2.0/SeaSharkMultiverse.dll
+/home/luna/Prgr/C#/SeaSharkMultiverse/obj/Debug/netcoreapp2.0/SeaSharkMultiverse.pdb
