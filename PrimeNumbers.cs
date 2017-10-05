@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ParallelPrimeNumbersSearch
 {
@@ -9,24 +10,30 @@ namespace ParallelPrimeNumbersSearch
         static int Main(string[] args)
         {
             int[] counts = new int[] {1000, 10000, 100000, 1000000, 10000000};
-            foreach(var count in counts) {
-                TimeTest(count, false);
-                TimeTest(count, true);
-                Console.WriteLine();
-            }
+            foreach(var count in counts)
+                TimeTest(count);
+                
             return 0;
         }
         
-        static void TimeTest(int x, bool parallel) {
-            var before = DateTime.UtcNow;
-            if(parallel)
-                PrimeNumbers.ParallelPrimeNumbers(x);
-            else
-                PrimeNumbers.SimplePrimeNumbers(x);
-            var timeTaken = DateTime.UtcNow - before;
-            Console.WriteLine("{0} prime search for {1} values took {2} ms.",
-                            (parallel ? "Parallel" : "Not parallel"), x, timeTaken.Milliseconds);
+        static void TimeTest(int x) {
+            Stopwatch stopWatch = new Stopwatch();
+            
+            stopWatch.Start();
+            PrimeNumbers.SimplePrimeNumbers(x);
+            stopWatch.Stop();
+            Console.WriteLine("Simple prime search for {0} values took {1} ms.",
+                              x, stopWatch.ElapsedMilliseconds);
+            
+            stopWatch.Restart();
+            PrimeNumbers.ParallelPrimeNumbers(x);
+            stopWatch.Stop();
+            Console.WriteLine("Parallel prime search for {0} values took {1} ms.",
+                              x, stopWatch.ElapsedMilliseconds);
+            
+            Console.WriteLine();
         }
+        
         static void PrintArray(IList<int> array)
         {
             for (int i = 0; i < array.Count; i++)
@@ -73,8 +80,6 @@ namespace ParallelPrimeNumbersSearch
             for(int i = 0; i < tasks.Length; i++)
             {  
                 tasks[i].Wait(); 
-                // Console.WriteLine("Adding task{0} result:", i);
-                // PrintArray(tasks[i].Result);
                 res.AddRange(tasks[i].Result);
             }
             return res.ToArray();
