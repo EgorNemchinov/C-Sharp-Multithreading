@@ -11,27 +11,28 @@ namespace ParallelQSort
         public const int MIN_ELEMENTS_FOR_THREAD = 50; 
         static int threadCount = 0;
 
-        static void Swap(int[] array, int i, int j)
+        static void Swap<T>(IList<T> list, int i, int j)
         {
-            int tmp = array[i];
-            array[i] = array[j];
-            array[j] = tmp;
+            T tmp = list[i];
+            list[i] = list[j];
+            list[j] = tmp;
         }
 
-        static int DoPartition(int[] array, int left, int right)
+        static int DoPartition<T>(IList<T> list, int left, int right) 
+            where T:IComparable<T>
         {
             if(left >= right) 
                 return -1;
-            int p = array[(left + right) / 2];
+            T p = list[(left + right) / 2];
             int i = left, j = right;
             
             while (i <= j) {
-                while(array[i] < p) 
+                while(list[i].CompareTo(p) < 0) 
                     i++;
-                while(array[j] > p)
+                while(list[j].CompareTo(p) > 0)
                     j--;
                 if(i <= j) {
-                    Swap(array, i, j);
+                    Swap<T>(list, i, j);
                     i++;
                     j--;
                 }
@@ -40,7 +41,8 @@ namespace ParallelQSort
             return i;
         }
 
-        static void QuickSort(int[] array, int left, int right, bool parallel)
+        static void QuickSort<T>(IList<T> array, int left, int right, bool parallel)
+                    where T : IComparable<T>
         {
             int i = DoPartition(array, left, right);
             if (i == -1)
@@ -61,18 +63,22 @@ namespace ParallelQSort
             }
         }
 
-        public static void SimpleQuickSort(int[] array)
+        public static void SimpleQuickSort<T>(IList<T> array)
+                            where T : IComparable<T>
         {
-            QuickSort(array, 0, array.Length - 1, false);
+            QuickSort(array, 0, array.Count - 1, false);
         }
         
-        public static void ParallelQuickSort(int[] array) {
-            StartQuickSort(array, 0, array.Length - 1)?.Join();
+        public static void ParallelQuickSort<T>(IList<T> array)
+                            where T : IComparable<T>
+        {
+            StartQuickSort(array, 0, array.Count - 1)?.Join();
             Console.WriteLine("Threads was created: {0}", threadCount);
             threadCount = 0;
         }
 
-        public static Thread StartQuickSort(int[] array, int left, int right) {
+        public static Thread StartQuickSort<T>(IList<T> array, int left, int right) 
+                        where T : IComparable<T> {
             int numberOfThreads = Interlocked.CompareExchange(ref threadCount, 0, 0);
 
             if(numberOfThreads < MAX_THREADS && (right - left) > MIN_ELEMENTS_FOR_THREAD) {
@@ -89,7 +95,7 @@ namespace ParallelQSort
 
     class Testing {
          static void Main(string[] args)
-        {
+         {
             Console.WriteLine("MAX_THREADS = {0} & MIN_ELEMENTS_FOR_THREAD = {1}.", 
                                 QSort.MAX_THREADS, QSort.MIN_ELEMENTS_FOR_THREAD);
             int[] elemCounts = new int[] {100, 1000, 100000, 1000000, 10000000};
@@ -128,9 +134,9 @@ namespace ParallelQSort
             return array;
         }
 
-        static void PrintArray(int[] array)
+        static void PrintArray<T>(IList<T> array)
         {
-            for (int i = 0; i < array.Length; i++)
+            for (int i = 0; i < array.Count; i++)
             {
                 Console.Write(array[i]);
                 Console.Write(" ");
