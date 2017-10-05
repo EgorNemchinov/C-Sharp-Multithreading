@@ -1,86 +1,122 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Diagnostics;
 
-namespace MultiThreading
+namespace ParallelQSort
 {
     class QSort
     {
-        public const int MAX_THREADS = 15; 
+        public const int MAX_THREADS = 15;
         public const int MIN_ELEMENTS_FOR_THREAD = 50; 
         static int threadCount = 0;
-        static void swap(int[] array, int i, int j) {
+
+        static void Swap(int[] array, int i, int j)
+        {
             int tmp = array[i];
             array[i] = array[j];
             array[j] = tmp;
         }
 
-        public static void ParallelQuickSort(int[] array) {
-            StartQuickSort(array, 0, array.Length - 1).Join();
-            Console.WriteLine("Threads was created: {0}", threadCount);
-            threadCount = 0;
-        }
-        static void QuickSort(int[] array, int left, int right) {
+        static int DoPartition(int[] array, int left, int right)
+        {
             if(left >= right) 
-                return;
+                return -1;
             int p = array[(left + right) / 2];
             int i = left, j = right;
+            
             while (i <= j) {
                 while(array[i] < p) 
                     i++;
                 while(array[j] > p)
                     j--;
                 if(i <= j) {
-                    swap(array, i, j);
+                    Swap(array, i, j);
                     i++;
                     j--;
                 }
             };
             
+            return i;
+        }
 
-            Thread leftSort = StartQuickSort(array, left, i - 1);
-            Thread rightSort = StartQuickSort(array, i, right);
+        static void QuickSort(int[] array, int left, int right, bool parallel)
+        {
+            int i = DoPartition(array, left, right);
+            if (i == -1)
+                return;
 
-            if(leftSort != null) {
-                leftSort.Join();
+            if (parallel)
+            {
+                Thread leftSort = StartQuickSort(array, left, i - 1);
+                Thread rightSort = StartQuickSort(array, i, right);
+
+                leftSort?.Join();
+                rightSort?.Join();
             }
-            if(rightSort != null) {
-                rightSort.Join();
+            else
+            {
+                QuickSort(array, left, i - 1, false);
+                QuickSort(array, i, right, false);
             }
+        }
+
+        public static void SimpleQuickSort(int[] array)
+        {
+            QuickSort(array, 0, array.Length - 1, false);
+        }
+        
+        public static void ParallelQuickSort(int[] array) {
+            StartQuickSort(array, 0, array.Length - 1)?.Join();
+            Console.WriteLine("Threads was created: {0}", threadCount);
+            threadCount = 0;
         }
 
         public static Thread StartQuickSort(int[] array, int left, int right) {
             int numberOfThreads = Interlocked.CompareExchange(ref threadCount, 0, 0);
 
             if(numberOfThreads < MAX_THREADS && (right - left) > MIN_ELEMENTS_FOR_THREAD) {
-                var t = new Thread(() => QuickSort(array, left, right));
+                var t = new Thread(() => QuickSort(array, left, right, true));
                 Interlocked.Increment(ref threadCount);
                 t.Start();
                 return t;
             } else {
-                QuickSort(array, left, right);
+                QuickSort(array, left, right, false);
                 return null;
             }
         }
     }
 
     class Testing {
-        static void Main(string[] args)
+         static void Main(string[] args)
         {
             Console.WriteLine("MAX_THREADS = {0} & MIN_ELEMENTS_FOR_THREAD = {1}.", 
                                 QSort.MAX_THREADS, QSort.MIN_ELEMENTS_FOR_THREAD);
-            int[] elemCounts = new int[] {1000, 100000, 1000000, 10000000};
+            int[] elemCounts = new int[] {100, 1000, 100000, 1000000, 10000000};
             foreach (var count in elemCounts)
             {
-                Console.WriteLine("For {0} elements in array QSort took {1} ms.",
-                                     count, TimeRandomQSort(count));
+                TimeTestRandomQSort(count);
             }
         }
 
-        static int TimeRandomQSort(int elementsAmount) {
-            var before = DateTime.UtcNow;
-            QSort.ParallelQuickSort(RandomArray(elementsAmount));
-            var timeTaken = DateTime.UtcNow - before;
-            return timeTaken.Milliseconds;
+        static void TimeTestRandomQSort(int elementsAmount)
+        {
+            var array = RandomArray(elementsAmount);
+            Stopwatch stopWatch = new Stopwatch();
+            
+            stopWatch.Start();
+            QSort.SimpleQuickSort(array);
+            stopWatch.Stop();
+            Console.WriteLine("For {0} random elements simple QSort took {1} ms.",
+                elementsAmount, stopWatch.ElapsedMilliseconds);
+            
+            stopWatch.Restart();
+            QSort.ParallelQuickSort(array);
+            stopWatch.Stop();
+            Console.WriteLine("For {0} random elements parallel QSort took {1} ms.",
+                                elementsAmount, stopWatch.ElapsedMilliseconds);
+            
+            Console.WriteLine();
         }
 
         static int[] RandomArray(int length) {
