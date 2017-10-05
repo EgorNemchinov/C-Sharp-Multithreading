@@ -15,8 +15,8 @@ namespace ParallelPrimeNumbersSearch
                 Console.WriteLine();
             }
             return 0;
-        
         }
+        
         static void TimeTest(int x, bool parallel) {
             var before = DateTime.UtcNow;
             if(parallel)
@@ -27,9 +27,9 @@ namespace ParallelPrimeNumbersSearch
             Console.WriteLine("{0} prime search for {1} values took {2} ms.",
                             (parallel ? "Parallel" : "Not parallel"), x, timeTaken.Milliseconds);
         }
-        static void PrintArray(int[] array)
+        static void PrintArray(IList<int> array)
         {
-            for (int i = 0; i < array.Length; i++)
+            for (int i = 0; i < array.Count; i++)
             {
                 Console.Write(array[i]);
                 Console.Write(" ");
@@ -47,19 +47,19 @@ namespace ParallelPrimeNumbersSearch
     class PrimeNumbers {
         public const int MAX_THREADS = 15;
 
-        public static int[] SimplePrimeNumbers(int x) {
-            return FilterZeros(PrimeNumbersInRange(0, x));
+        public static IList<int> SimplePrimeNumbers(int x) {
+            return PrimeNumbersInRange(0, x);
         }
 
-        public static int[] ParallelPrimeNumbers(int x) {
+        public static IList<int> ParallelPrimeNumbers(int x) {
             Range[] ranges = GenerateRanges(x);
-            Task<int[]>[] tasks = new Task<int[]>[ranges.Length];
+            Task<IList<int>>[] tasks = new Task<IList<int>>[ranges.Length];
             List<int> res = new List<int>();
 
             for(int i = 0; i < tasks.Length; i++)
             {
                 int from = ranges[i].left, to = ranges[i].right;
-                tasks[i] = new Task<int[]>(() => 
+                tasks[i] = new Task<IList<int>>(() => 
                 PrimeNumbersInRange(from, to));
             }
             for(int i = 0; i < tasks.Length; i++)
@@ -75,22 +75,20 @@ namespace ParallelPrimeNumbersSearch
                 tasks[i].Wait(); 
                 // Console.WriteLine("Adding task{0} result:", i);
                 // PrintArray(tasks[i].Result);
-                res.AddRange(FilterZeros(tasks[i].Result));
+                res.AddRange(tasks[i].Result);
             }
-            // PrintArray(res.ToArray());
             return res.ToArray();
         }
 
-        static int[] PrimeNumbersInRange(int lo, int hi) {
-            // Trying to pick the perfect array size
-            int arraySize = 3 +  AmountOfPrimesLessThan(hi) - AmountOfPrimesLessThan(lo);
-            int[] primes = new int[arraySize];
-            int ptr = 0;
+        static IList<int> PrimeNumbersInRange(int lo, int hi) {
+            // Trying to pick the perfect list size
+            int listSize = AmountOfPrimesLessThan(hi) - AmountOfPrimesLessThan(lo);
+            List<int> primes = new List<int>(Math.Max(0, listSize));
 
             for(int i = lo; i <= hi; i++) {
-                if(isPrime(i)) { 
-                    primes[ptr] = i;
-                    ptr++;
+                if(isPrime(i))
+                {
+                    primes.Add(i);
                 }
             }
             return primes;
@@ -107,26 +105,10 @@ namespace ParallelPrimeNumbersSearch
             return ranges;
         }
 
-        //Removes zeros from the array
-        static int[] FilterZeros(int[] array) {
-            int lastNumIndex = -1;
-            for(int i = array.Length - 1; i >= 0; i--) {
-                if(array[i] != 0) {
-                    lastNumIndex = i;
-                    break;
-                }
-            }
-            if(lastNumIndex == -1)
-                return array;
-            int[] final = new int[lastNumIndex+1];
-            Array.Copy(array, 0, final, 0, lastNumIndex+1);
-            return final;
-        }
-
-        // Ceiling approximation
+        // Approximation
         static int AmountOfPrimesLessThan(int x) {
             if (x < 2) return 0;
-            return (Int32) (1.1*x / Math.Log(x - 1, 3)) + 1;
+            return (Int32) (x / Math.Log(x - 1, 3));
         }
 
         static bool isPrime(int num) {
