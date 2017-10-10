@@ -1,34 +1,86 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace ParallelMD5
+namespace SeaSharkMultiverse
 {
     class ParallelFolderMD5
     {
+        //Whether to print in-between results like calculating MD5 of file
+        private const bool Verbose = false;
+
+        private const int MaxThreads = 15;
+        
         static void Main(string[] args)
         {
-            MD5 md5 = MD5.Create();
-            string folderHash = FolderMD5(md5, ".");
-            Console.WriteLine("Hash of folder is {0}", folderHash);
+            //On big enough folder this difference is noticeable
+            //I got parallel version ~6 times faster
+            TimeTest(".");
         }
 
-        static string FolderMD5(MD5 md5Hash, string folderPath)
+        static void TimeTest(string folderPath)
         {
+            Stopwatch stopWatch = new Stopwatch();
+            
+            stopWatch.Start();
+            string folderHash = FolderMD5(MD5.Create(), folderPath, false);
+            stopWatch.Stop();
+            Console.WriteLine("Simple calculating MD5 of the folder {0} took {1} ms.\n" +
+                              "Hash is {2}.\n", NameFromPath(folderPath),
+                                stopWatch.ElapsedMilliseconds, folderHash);
+            
+            stopWatch.Restart();
+            folderHash = FolderMD5(MD5.Create(), folderPath, false);
+            stopWatch.Stop();
+            Console.WriteLine("Parallel calculating MD5 of the folder {0} took {1} ms.\n" +
+                              "Hash is {2}.\n", NameFromPath(folderPath),
+                                stopWatch.ElapsedMilliseconds, folderHash);
+        }
+
+        static string FolderMD5(MD5 md5Hash, string folderPath, bool parallel)
+        {
+            if (!Directory.Exists(folderPath))
+            {
+                Console.WriteLine("Directory {0} doesn't exist.\n", folderPath);
+                return "ERROR";
+            }
+            
             string folderName = NameFromPath(folderPath);
             StringBuilder sBuilder = new StringBuilder();
-            Console.WriteLine("Starting to compute hash of folder: {0}", folderName);
+            if(Verbose)
+                Console.WriteLine("Starting to compute hash of folder: {0}", folderName);
             
             sBuilder.Append(StringMD5(md5Hash, folderName));
-            
             string[] paths = Directory.GetFiles(folderPath);
-            foreach (var path in paths)
+            
+            if (parallel)
             {
-                sBuilder.Append(FileMD5(md5Hash, path)); //parallel here
+                string[] hashes = new string[paths.Length];
+                Parallel.For(0, paths.Length, new ParallelOptions
+                    {
+                        MaxDegreeOfParallelism = MaxThreads
+                    },
+                    index =>
+                    {
+                        MD5 md5 = MD5.Create();
+                        hashes[index] = FileMD5(md5, paths[index]);
+                        if(Verbose)
+                            Console.WriteLine("Computed hash of file {0}", NameFromPath(paths[index]));
+                    });
+                sBuilder.Append(hashes);
             }
-            Console.WriteLine("Finished computing folder hash.\n");
+            else
+            {
+                foreach (var path in paths)
+                {
+                    sBuilder.Append(FileMD5(md5Hash, path)); 
+                }    
+            }
+            if(Verbose)
+                Console.WriteLine("Finished computing folder hash.\n");
             
             return StringMD5(md5Hash, sBuilder.ToString());
         }
@@ -44,12 +96,13 @@ namespace ParallelMD5
         {
             byte[] fileBytes = File.ReadAllBytes(filePath);
             byte[] data = md5Hash.ComputeHash(fileBytes);
-            Console.WriteLine("Computed hash of file: {0}", NameFromPath(filePath));
+            if(Verbose)
+                Console.WriteLine("Computed hash of file: {0}", NameFromPath(filePath));
             
             return BytesToString(data);
         }
 
-        static string BytesToString(byte[] bytes)
+        private static string BytesToString(byte[] bytes)
         {
             StringBuilder sBuilder = new StringBuilder();
             for (int i = 0; i < bytes.Length; i++)
@@ -59,12 +112,12 @@ namespace ParallelMD5
             return sBuilder.ToString();            
         }
 
-        static string NameFromPath(string path)
+        private static string NameFromPath(string path)
         {
-            var parts = path.Split("/");
-            if (parts.Length < 2)
-                return parts.Last();
-            return parts.Last().Length == 0 ? parts[parts.Length - 2] : parts.Last();
+            if (Directory.Exists(path))
+                return new DirectoryInfo(path).Name;
+            else
+                return new FileInfo(path).Name;
         }
     }
    
