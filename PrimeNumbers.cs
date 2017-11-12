@@ -3,33 +3,46 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace ParallelPrimeNumbersSearch
 {
     class Test {
         static int Main(string[] args)
         {
-            int[] counts = new int[] {1000, 10000, 100000, 1000000, 10000000};
+            int[] counts = new int[] {1000, 100000, 1000000, 10000000};
             foreach(var count in counts)
                 TimeTest(count);
-                
+
+            Console.WriteLine("Finished.");
             return 0;
         }
         
         static void TimeTest(int x) {
             Stopwatch stopWatch = new Stopwatch();
             
+            PrimeNumbers.Method[] methods =
+            {
+                PrimeNumbers.Method.Tasks, PrimeNumbers.Method.ThreadPool
+            };
+
             stopWatch.Start();
-            PrimeNumbers.SimplePrimeNumbers(x);
+            IList<int> standardPrimes = PrimeNumbers.SimplePrimeNumbers(x);
             stopWatch.Stop();
             Console.WriteLine("Simple prime search for {0} values took {1} ms.",
                               x, stopWatch.ElapsedMilliseconds);
-            
-            stopWatch.Restart();
-            PrimeNumbers.ParallelPrimeNumbers(x);
-            stopWatch.Stop();
-            Console.WriteLine("Parallel prime search for {0} values took {1} ms.",
-                              x, stopWatch.ElapsedMilliseconds);
+
+            foreach (var method in methods)
+            {
+                stopWatch.Restart();
+                IList<int> numbers = PrimeNumbers.ParallelPrimeNumbers(x, method);
+                stopWatch.Stop();
+                if(!numbers.SequenceEqual(standardPrimes))
+                    Console.WriteLine("Failed: prime search with {0} returns wrong result.",
+                                        method);
+                Console.WriteLine("Parallel prime search with {0} for {1} values took {2} ms.",
+                    method, x, stopWatch.ElapsedMilliseconds);
+            }
             
             Console.WriteLine();
         }
@@ -54,12 +67,31 @@ namespace ParallelPrimeNumbersSearch
     class PrimeNumbers {
         public const int MAX_THREADS = 15;
 
+        public enum Method
+        {
+            Tasks, Threads, ThreadPool
+        }
+
         public static IList<int> SimplePrimeNumbers(int x) {
             return PrimeNumbersInRange(0, x);
         }
-
-        public static IList<int> ParallelPrimeNumbers(int x) {
+        
+        public static IList<int> ParallelPrimeNumbers(int x, Method method) {
             Range[] ranges = GenerateRanges(x);
+            switch (method)
+            {
+                case Method.Tasks:
+                    return TaskPrimes(ranges);
+                case Method.ThreadPool:
+                    return ThreadPoolPrimes(ranges);
+                case Method.Threads:
+                    return ThreadsPrimes(ranges);
+            }
+            return new List<int>();
+        }
+
+        public static IList<int> TaskPrimes(Range[] ranges)
+        {
             Task<IList<int>>[] tasks = new Task<IList<int>>[ranges.Length];
             List<int> res = new List<int>();
 
@@ -67,22 +99,56 @@ namespace ParallelPrimeNumbersSearch
             {
                 int from = ranges[i].left, to = ranges[i].right;
                 tasks[i] = new Task<IList<int>>(() => 
-                PrimeNumbersInRange(from, to));
+                    PrimeNumbersInRange(from, to));
             }
-            for(int i = 0; i < tasks.Length; i++)
+            foreach (Task<IList<int>> task in tasks)
             {
-                tasks[i].Start();
+                task.Start();
             }
             Task t = Task.WhenAll(tasks);
             try {
                 t.Wait();
             } catch {}
-            for(int i = 0; i < tasks.Length; i++)
-            {  
-                tasks[i].Wait(); 
-                res.AddRange(tasks[i].Result);
+            
+            foreach (Task<IList<int>> task in tasks)
+            {
+                task.Wait();
+                res.AddRange(task.Result);
             }
             return res.ToArray();
+        }
+
+        public static IList<int> ThreadPoolPrimes(Range[] ranges)
+        {
+            List<int> res = new List<int>();
+            IList<int>[] lists = new IList<int>[ranges.Length];
+            
+            var events = new ManualResetEvent[ranges.Length];
+            
+            for (int i = 0; i < ranges.Length; i++)
+            {
+                int ind = i;
+                
+                events[ind] = new ManualResetEvent(false);
+                ThreadPool.QueueUserWorkItem(delegate
+                {
+                    lists[ind] = PrimeNumbersInRange(ranges[ind].left, ranges[ind].right);
+                    events[ind].Set();
+                });
+
+            }
+            WaitHandle.WaitAll(events);
+            
+            foreach (var list in lists)
+            {
+                res.AddRange(list);
+            }
+            return res;
+        }
+
+        public static IList<int> ThreadsPrimes(Range[] ranges)
+        {
+            return new List<int>();
         }
 
         static IList<int> PrimeNumbersInRange(int lo, int hi) {
