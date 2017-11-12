@@ -7,6 +7,11 @@ using System.Linq;
 
 namespace ParallelPrimeNumbersSearch
 {
+    public enum Method
+    {
+        Tasks, Threads, ThreadPool
+    }
+    
     class Test {
         static int Main(string[] args)
         {
@@ -21,9 +26,9 @@ namespace ParallelPrimeNumbersSearch
         static void TimeTest(int x) {
             Stopwatch stopWatch = new Stopwatch();
             
-            PrimeNumbers.Method[] methods =
+            Method[] methods =
             {
-                PrimeNumbers.Method.Tasks, PrimeNumbers.Method.ThreadPool
+                Method.Tasks, Method.ThreadPool, Method.Threads
             };
 
             stopWatch.Start();
@@ -57,6 +62,7 @@ namespace ParallelPrimeNumbersSearch
             Console.WriteLine();
         }
     }
+        
     class Range {
         public int left, right;
         public Range(int left, int right) {
@@ -64,13 +70,10 @@ namespace ParallelPrimeNumbersSearch
             this.right = right;
         }
     }
+    
     class PrimeNumbers {
         public const int MAX_THREADS = 15;
 
-        public enum Method
-        {
-            Tasks, Threads, ThreadPool
-        }
 
         public static IList<int> SimplePrimeNumbers(int x) {
             return PrimeNumbersInRange(0, x);
@@ -148,7 +151,30 @@ namespace ParallelPrimeNumbersSearch
 
         public static IList<int> ThreadsPrimes(Range[] ranges)
         {
-            return new List<int>();
+            List<int> res = new List<int>();
+            Thread[] threads = new Thread[ranges.Length];
+            IList<int>[] lists = new IList<int>[ranges.Length];
+
+            for (int i = 0; i < ranges.Length; i++)
+            {
+                int ind = i;
+                threads[ind] = new Thread(() =>
+                    lists[ind] = PrimeNumbersInRange(ranges[ind].left, ranges[ind].right));
+            }
+            foreach (var thread in threads)
+            {
+                thread.Start();
+            }
+            foreach (var thread in threads)
+            {
+                thread.Join();
+            }
+            
+            foreach (var list in lists)
+            {
+                res.AddRange(list);
+            }
+            return res;
         }
 
         static IList<int> PrimeNumbersInRange(int lo, int hi) {
