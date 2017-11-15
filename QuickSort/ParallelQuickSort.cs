@@ -1,9 +1,9 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Diagnostics;
 
-namespace ParallelQSort
+namespace QuickSort
 {
     class QSort
     {
@@ -93,8 +93,8 @@ namespace ParallelQSort
         }
     }
 
-    class Testing {
-         static void Main(string[] args)
+    class Tests {
+         public static void Run()
          {
             Console.WriteLine("MAX_THREADS = {0} & MIN_ELEMENTS_FOR_THREAD = {1}.", 
                                 QSort.MAX_THREADS, QSort.MIN_ELEMENTS_FOR_THREAD);

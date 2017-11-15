@@ -1,26 +1,25 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace ParallelPrimeNumbersSearch
+namespace PrimeNumbers
 {
     public enum Method
     {
         Tasks, Threads, ThreadPool
     }
     
-    class Test {
-        static int Main(string[] args)
+    class Tests {
+        public static void Run()
         {
             int[] counts = new int[] {1000, 100000, 1000000, 10000000};
             foreach(var count in counts)
                 TimeTest(count);
 
             Console.WriteLine("Finished.");
-            return 0;
         }
         
         static void TimeTest(int x) {
@@ -36,12 +35,14 @@ namespace ParallelPrimeNumbersSearch
             stopWatch.Stop();
             Console.WriteLine("Simple prime search for {0} values took {1} ms.",
                               x, stopWatch.ElapsedMilliseconds);
+            
 
             foreach (var method in methods)
             {
                 stopWatch.Restart();
                 IList<int> numbers = PrimeNumbers.ParallelPrimeNumbers(x, method);
                 stopWatch.Stop();
+                
                 if(!numbers.SequenceEqual(standardPrimes))
                     Console.WriteLine("Failed: prime search with {0} returns wrong result.",
                                         method);
@@ -52,7 +53,7 @@ namespace ParallelPrimeNumbersSearch
             Console.WriteLine();
         }
         
-        static void PrintArray(IList<int> array)
+        static void PrintArray(IList<int> array) 
         {
             for (int i = 0; i < array.Count; i++)
             {
@@ -65,6 +66,7 @@ namespace ParallelPrimeNumbersSearch
         
     class Range {
         public int left, right;
+        
         public Range(int left, int right) {
             this.left = left;
             this.right = right;
@@ -74,13 +76,12 @@ namespace ParallelPrimeNumbersSearch
     class PrimeNumbers {
         public const int MAX_THREADS = 15;
 
-
         public static IList<int> SimplePrimeNumbers(int x) {
             return PrimeNumbersInRange(0, x);
         }
         
         public static IList<int> ParallelPrimeNumbers(int x, Method method) {
-            Range[] ranges = GenerateRanges(x);
+            var ranges = GenerateRanges(x);
             switch (method)
             {
                 case Method.Tasks:
@@ -89,14 +90,15 @@ namespace ParallelPrimeNumbersSearch
                     return ThreadPoolPrimes(ranges);
                 case Method.Threads:
                     return ThreadsPrimes(ranges);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(method), method, null);
             }
-            return new List<int>();
         }
 
         public static IList<int> TaskPrimes(Range[] ranges)
         {
-            Task<IList<int>>[] tasks = new Task<IList<int>>[ranges.Length];
-            List<int> res = new List<int>();
+            var tasks = new Task<IList<int>>[ranges.Length];
+            var res = new List<int>();
 
             for(int i = 0; i < tasks.Length; i++)
             {
@@ -151,9 +153,9 @@ namespace ParallelPrimeNumbersSearch
 
         public static IList<int> ThreadsPrimes(Range[] ranges)
         {
-            List<int> res = new List<int>();
-            Thread[] threads = new Thread[ranges.Length];
-            IList<int>[] lists = new IList<int>[ranges.Length];
+            var res = new List<int>();
+            var threads = new Thread[ranges.Length];
+            var lists = new IList<int>[ranges.Length];
 
             for (int i = 0; i < ranges.Length; i++)
             {

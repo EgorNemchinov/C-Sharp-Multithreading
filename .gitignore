@@ -1,15 +1,9 @@
-# Created by https://www.gitignore.io/api/visualstudiocode
+#RiderC#
+.idea/
+*.*.iml
+packages/**/*
+!packages/repositories.config
+**/obj/*
+**/bin/*
+**/Debug/*
 
-### VisualStudioCode ###
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history
-
-Debug/
-bin/
-obj/
-
-# End of https://www.gitignore.io/api/visualstudiocode

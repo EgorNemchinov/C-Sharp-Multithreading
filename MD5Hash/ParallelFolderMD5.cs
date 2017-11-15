@@ -1,11 +1,11 @@
-﻿using System;
+﻿﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SeaSharkMultiverse
+namespace MD5Hash
 {
     class ParallelFolderMD5
     {
@@ -13,15 +13,8 @@ namespace SeaSharkMultiverse
         private const bool Verbose = false;
 
         private const int MaxThreads = 15;
-        
-        static void Main(string[] args)
-        {
-            //On big enough folder this difference is noticeable
-            //I got parallel version ~6 times faster
-            TimeTest(".");
-        }
 
-        static void TimeTest(string folderPath)
+        public static void TimeTest(string folderPath)
         {
             Stopwatch stopWatch = new Stopwatch();
             
@@ -118,6 +111,14 @@ namespace SeaSharkMultiverse
                 return new DirectoryInfo(path).Name;
             else
                 return new FileInfo(path).Name;
+        }
+    }
+
+    class Tests
+    {
+        public static void Run(String path = "./")
+        {
+            ParallelFolderMD5.TimeTest(path);
         }
     }
    
