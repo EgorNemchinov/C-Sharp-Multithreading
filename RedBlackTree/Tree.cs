@@ -7,11 +7,40 @@ namespace RedBlackTree
     public class Tree<V> where V: IComparable<V>
     {
         public Node<V> root = null;
-        private Node<V> nil = new Node<V>(value: null, isBlack: true);
 
         public Tree(Node<V> root = null)
         {
             this.root = root;
+        }
+
+        public Node<V> Find(V value)
+        {
+            if (value == null)
+            {
+                Console.WriteLine("Error: Value passed into Find() is null.");
+                return null;
+            }
+            if (root == null)
+                return null;
+            var currentNode = root;
+            while (true)
+            {
+                if (value.CompareTo(currentNode.value) > 0)
+                {
+                    if (currentNode.GetRight() == null)
+                        return null;
+                    currentNode = currentNode.GetRight();
+                } else if (value.CompareTo(currentNode.value) < 0)
+                {
+                    if (currentNode.GetLeft() == null)
+                        return null;
+                    currentNode = currentNode.GetLeft();
+                }
+                else
+                {
+                    return currentNode;
+                }
+            }
         }
 
         public void Insert(V value)
