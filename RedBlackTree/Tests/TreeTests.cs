@@ -8,6 +8,25 @@ namespace RedBlackTree.Tests
     public class TreeTests
     {
         [Test]
+        public void FindThreeKeys()
+        {
+            var expectedTree = new Tree<int>();
+    
+            var root = new Node<int>(20);;
+            root.isBlack = true;
+    
+            expectedTree.root = root;
+            expectedTree.root.SetLeft(new Node<int>(15));
+            expectedTree.root.SetRight(new Node<int>(25));
+    
+            Assert.AreEqual(expectedTree.Find(20), expectedTree.root);
+            Assert.AreEqual(expectedTree.Find(15), expectedTree.root.GetLeft());
+            Assert.AreEqual(expectedTree.Find(25), expectedTree.root.GetRight());
+            Assert.AreEqual(expectedTree.Find(30), null);
+        }
+        
+        
+        [Test]
         public void InsertOneKey() {
     
             var expectedTree = new Tree<int>();
