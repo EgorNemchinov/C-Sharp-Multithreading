@@ -1,6 +1,9 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 
 namespace RedBlackTree
 {
@@ -85,6 +88,17 @@ namespace RedBlackTree
             root.isBlack = true;
         }
 
+        public bool Remove(V value)
+        {
+            var deletedNode = Find(value);
+            if (deletedNode == null)
+            {
+                Console.WriteLine($"Value {value} is not in the tree.");
+                return false;                
+            }
+            return Remove(deletedNode);
+        }
+
         public void CorrectAfterInsertion(Node<V> node)
         {
             if (node.parent != null && node.parent.isBlack)
@@ -131,7 +145,6 @@ namespace RedBlackTree
                     //right line
                     grandparent.RotateLeft();
                     currentNode.parent.isBlack = true;
-//                    currentNode.parent = null;
                     grandparent.isBlack = false;
                     root = currentNode.parent;
                 }
@@ -140,9 +153,196 @@ namespace RedBlackTree
                 root = CalculateRoot(root) as Node<V>;
             }
             if (currentNode.parent != null && !currentNode.parent.isBlack) {
-                //continue for parent if it'    s red
                 CorrectAfterInsertion(currentNode.parent);
             }
+        }
+
+        private bool Remove(Node<V> node)
+        {
+            Console.WriteLine($"Remove for {node.value}");
+            
+            if (node.GetRight() != null && node.GetLeft() != null)
+            {
+                Node<V> successor = new Tree<V>(node.GetRight()).Min();
+                node.value = successor.value;
+                Remove(successor);
+                return true;
+            } else if (node.parent == null && node.isLeaf())
+            {
+                root = null;
+                return true;
+            } 
+            else if (!node.isBlack && node.isLeaf())
+            {
+                node.SetParentsReferenceTo(null);
+                return true;
+            } 
+            else if (node.isBlack && node.GetRight() != null && !node.GetRight().isBlack)
+            {
+                node.value = node.GetRight().value;
+                node.SetRight(null);
+                return true;
+            } else if (node.isBlack && node.GetLeft() != null && !node.GetLeft().isBlack)
+            {
+                node.value = node.GetLeft().value;
+                node.SetLeft(null);
+                return true;
+            }
+            else
+            {
+                Case1(node);
+            }
+            
+            root = CalculateRoot(node);
+            node.SetParentsReferenceTo(null);
+            
+            return true;
+        }
+
+        private void Case1(Node<V> node)
+        {
+            if (node.parent == null)
+            {
+                node.isBlack = true;
+                return;
+            }
+
+            if (node.value.CompareTo(node.parent.value) < 0)
+            {
+                Case2Left(node);
+            }
+            else
+                Case2Right(node);
+        }
+
+        private void Case2Left(Node<V> node)
+        {
+            var brother = node.Brother();
+
+            if (brother != null && !brother.isBlack)
+            {
+                node.parent.Recolor();
+                brother.Recolor();
+                node.parent.RotateLeft();
+                Case1(node);
+                return;
+            }
+
+            Case3(node);
+        }
+        
+         private void Case2Right(Node<V> node)
+         {   
+            var brother = node.Brother();
+
+            if (brother != null && !brother.isBlack)
+            {
+                node.parent.Recolor();
+                brother.Recolor();
+                node.parent.RotateRight();
+                Case1(node);
+                return;
+            }
+
+            Case3(node);
+
+        }
+
+        private void Case3(Node<V> node)
+        {
+            var brother = node.Brother();
+            
+            if (brother != null && (brother.GetLeft() == null || brother.GetLeft().isBlack)
+                &&
+                (brother.GetRight() == null || brother.GetRight().isBlack))
+            {
+                node.isBlack = true;
+                brother.Recolor();
+                
+                if (!node.parent.isBlack)
+                {
+                    node.parent.Recolor();
+                    return;
+                }
+                Case1(node.parent);
+                return;
+            }
+
+            if (node.value.CompareTo(node.parent.value) < 0)
+            {
+                Case4Left(node);
+            }
+            else
+            {
+                Case4Right(node);
+            }
+
+        }
+
+        private void Case4Left(Node<V> node)
+        {
+            var brother = node.Brother();
+
+            if (brother != null 
+                && (brother.GetRight() == null || brother.GetRight().isBlack))
+            {
+                brother.Recolor();
+                brother.GetLeft().Recolor();
+                brother.RotateRight();
+                Case1(node);
+                return;
+            }
+
+            Case5Left(node);
+
+        }
+
+        private void Case4Right(Node<V> node)
+        {
+            var brother = node.Brother();
+
+            if ((brother.GetLeft() == null) || brother.GetLeft().isBlack)
+            {
+                brother.Recolor();
+                brother.GetRight().Recolor();
+                brother.RotateLeft();
+                Case1(node);
+                return;
+            }
+
+            Case5Right(node);
+
+        }
+
+        private void Case5Left(Node<V> node)
+        {
+            var brother = node.Brother();
+
+            if (brother != null && 
+                (brother.GetRight() != null) && !brother.GetRight().isBlack)
+            {
+                brother.isBlack = node.parent.isBlack;
+                node.isBlack = true;
+                node.parent.isBlack = true;
+                brother.GetRight().isBlack = true;
+                node.parent.RotateLeft();
+            }
+
+        }
+
+        private void Case5Right(Node<V> node)
+        {
+            var brother = node.Brother();
+
+            if ((brother.GetLeft() != null) && !brother.GetLeft().isBlack)
+            {
+                brother.isBlack = node.parent.isBlack;
+                node.isBlack = true;
+                node.parent.isBlack = true;
+                brother.GetLeft().isBlack = true;
+                node.parent.RotateRight();
+            }
+
         }
 
         public override bool Equals(object obj)
@@ -157,8 +357,9 @@ namespace RedBlackTree
             var thisIterator = new BfsIterator<V>(this);
             var otherIterator = new BfsIterator<V>(other);
             
-            Console.Error.WriteLine($"Comparing trees with root {this.root.value} " +
-                                    $"and {other.root.value}");
+            if(this.root != null && other.root != null)
+                Console.Error.WriteLine($"Comparing trees with root {this.root.value} " +
+                                        $"and {other.root.value}");
             
             while(thisIterator.hasNext() && otherIterator.hasNext())
             {
@@ -176,7 +377,9 @@ namespace RedBlackTree
 
             if (thisIterator.hasNext() != otherIterator.hasNext())
             {
-                Console.WriteLine("Trees have different sizes. Not equal.");
+                Console.WriteLine($"Trees have different sizes: {1} and {1}. Not equal.");
+                Console.WriteLine(thisIterator.hasNext() ? thisIterator.next().ToString() : 
+                                    otherIterator.next().ToString());
                 return false;                
             }
 
@@ -196,6 +399,14 @@ namespace RedBlackTree
                 cur = cur.parent;
             }
             return cur;
+        }
+
+        private Node<V> Min()
+        {
+            var resNode = root;
+            while (resNode?.GetLeft() != null)
+                resNode = resNode.GetLeft();
+            return resNode;
         }
     }
     
