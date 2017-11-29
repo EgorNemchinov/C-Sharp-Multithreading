@@ -6,7 +6,9 @@ namespace WebRuler
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Someday I will be very important program..");
+            WebParser parser = new WebParser();
+            parser.Execute("https://www.google.ru/", 2);
+            Console.WriteLine("\nFinished.");
         }
     }
 }
