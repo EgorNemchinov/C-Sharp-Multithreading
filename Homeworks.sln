@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickSort", "QuickSort\Quic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MD5Hash", "MD5Hash\MD5Hash.csproj", "{1C5D8F37-81D6-4244-B8C0-50E7845C1540}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebRuler", "WebRuler\WebRuler.csproj", "{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{1C5D8F37-81D6-4244-B8C0-50E7845C1540}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C5D8F37-81D6-4244-B8C0-50E7845C1540}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C5D8F37-81D6-4244-B8C0-50E7845C1540}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
