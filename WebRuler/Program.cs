@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace WebRuler
 {
@@ -7,26 +8,36 @@ namespace WebRuler
     {
         public static void Main(string[] args)
         {
-            CompareTimeTest("https://vk.com", 2);
+            CompareTimeTest("https://github.com/", 2);
         }
 
         public static void CompareTimeTest(String url, int depth)
         {
             Stopwatch stopwatch = new Stopwatch();
             WebParser parser = new WebParser();
-                
-            stopwatch.Start();
-            parser.Execute(url, depth);
-            stopwatch.Stop();
+
+            string parallelPath = @"out_par.txt";
+            string simplePath = @"out_sim.txt";
+
+            using (StreamWriter outputFile = new StreamWriter(simplePath))
+            {
+                stopwatch.Start();
+                parser.Execute(url, depth, null);
+                stopwatch.Stop();
+                Console.WriteLine("Finished simple parsing.");    
+            }
             var simpleTime = stopwatch.ElapsedMilliseconds;
-            Console.WriteLine("Finished simple parsing.\n");
 
-            stopwatch.Restart();
-            parser.ExecuteAsync(url, depth).Wait();
-            stopwatch.Stop();
+            using (StreamWriter outputFile = new StreamWriter(parallelPath))
+            {
+                stopwatch.Restart();
+                parser.ExecuteAsync(url, depth, outputFile).Wait();
+                stopwatch.Stop();
+                Console.WriteLine("Finished parallel parsing.");
+            }
             var parallelTime = stopwatch.ElapsedMilliseconds;
-            Console.WriteLine("Finished parallel parsing.\n");
 
+            
             Console.WriteLine();
             Console.WriteLine($"Parallel parsing of {url} took" +
                               $" {parallelTime} ms");

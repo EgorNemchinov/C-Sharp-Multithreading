@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -10,7 +11,7 @@ namespace WebRuler
     {
         private const int MaxThreads = 15;
 
-        public void Execute(String url, int depth)
+        public void Execute(String url, int depth, StreamWriter outWriter = null)
         {
             string source;
             try
@@ -19,26 +20,26 @@ namespace WebRuler
             }
             catch
             {
-                Console.WriteLine($"Unable to download page {url}.");
+                WriteLog($"Unable to download page {url}.", outWriter);
                 return;
             }
 
             IList<String> links = ParseLinks(source);
             var length = source.Length;
             
-            Console.WriteLine($"Length of page '{url}' is {length}");
+            WriteLog($"Length of page '{url}' is {length}", outWriter);
             if (depth == 0)
                 return;
-            Console.WriteLine($"\n------------ {depth} m. above the ground ------------");
+            WriteLog($"\n------------ {depth} m. above the ground ------------", outWriter);
         
 
             foreach (String link in links)
             {
-                Execute(link, depth - 1);
+                Execute(link, depth - 1, outWriter);
             }
         }
         
-        public async Task ExecuteAsync(String url, int depth)
+        public async Task ExecuteAsync(String url, int depth, StreamWriter outWriter = null)
         {
             string source;
             try
@@ -47,17 +48,17 @@ namespace WebRuler
             } 
             catch
             {
-                Console.WriteLine($"Unable to download page {url}.");
+                WriteLog($"Unable to download page {url}.", outWriter);
                 return;
             }
             
             IList<String> links = ParseLinks(source);
             var length = source.Length;
             
-            Console.WriteLine($"Length of page '{url}' is {length}");
+            WriteLog($"Length of page '{url}' is {length}", outWriter);
             if (depth == 0)
                 return;
-            Console.WriteLine($"\n------------ {depth} m. above the ground ------------");
+            WriteLog($"\n------------ {depth} m. above the ground ------------", outWriter);
         
             
             var tasks = new Task[links.Count];
@@ -67,9 +68,17 @@ namespace WebRuler
             }, ind =>
             {
                 var index = ind;
-                tasks[index] = ExecuteAsync(links[index], depth - 1);
+                tasks[index] = ExecuteAsync(links[index], depth - 1, outWriter);
             });
             Task.WhenAll(tasks).Wait();
+        }
+
+        private void WriteLog(string log, StreamWriter writer)
+        {
+            if (writer == null)
+                Console.WriteLine(log);
+            else
+                writer.WriteLine(log);
         }
 
         private IList<String> ParseLinks(String source)
