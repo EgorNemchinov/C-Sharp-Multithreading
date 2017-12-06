@@ -8,14 +8,20 @@ namespace WebRuler
 {
     public class WebParser
     {
-        private const int MAX_THREADS = 15;
-        
-        public void Execute(String url, int depth, bool parallel = true)
+        private const int MaxThreads = 15;
+
+        public void Execute(String url, int depth)
         {
-            var source = DownloadPage(url);
-            
-            if (source == null)
+            string source;
+            try
+            {
+                source = new WebClient().DownloadString(url);
+            }
+            catch
+            {
+                Console.WriteLine($"Unable to download page {url}.");
                 return;
+            }
 
             IList<String> links = ParseLinks(source);
             var length = source.Length;
@@ -24,24 +30,46 @@ namespace WebRuler
             if (depth == 0)
                 return;
             Console.WriteLine($"\n------------ {depth} m. above the ground ------------");
+        
+
+            foreach (String link in links)
+            {
+                Execute(link, depth - 1);
+            }
+        }
+        
+        public async Task ExecuteAsync(String url, int depth)
+        {
+            string source;
+            try
+            {
+                source = await new WebClient().DownloadStringTaskAsync(url);                
+            } 
+            catch
+            {
+                Console.WriteLine($"Unable to download page {url}.");
+                return;
+            }
             
-            if (parallel)
+            IList<String> links = ParseLinks(source);
+            var length = source.Length;
+            
+            Console.WriteLine($"Length of page '{url}' is {length}");
+            if (depth == 0)
+                return;
+            Console.WriteLine($"\n------------ {depth} m. above the ground ------------");
+        
+            
+            var tasks = new Task[links.Count];
+            Parallel.For(0, links.Count, new ParallelOptions()
             {
-                Parallel.ForEach(links, new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = MAX_THREADS
-                }, link =>
-                {
-                    Execute(link, depth - 1);
-                });
-            }
-            else
+                MaxDegreeOfParallelism = MaxThreads
+            }, ind =>
             {
-                foreach (String link in links)
-                {
-                    Execute(link, depth - 1, parallel=false);
-                }
-            }
+                var index = ind;
+                tasks[index] = ExecuteAsync(links[index], depth - 1);
+            });
+            Task.WhenAll(tasks).Wait();
         }
 
         private IList<String> ParseLinks(String source)
@@ -59,20 +87,5 @@ namespace WebRuler
             return list;
         }
 
-        private String DownloadPage(String url)
-        {
-            using (WebClient client = new WebClient())
-            {
-                try
-                {
-                    return client.DownloadString(url);
-                }
-                catch (System.Net.WebException exception)
-                {
-                    Console.WriteLine($"Unable to download {url}.");
-                    return null;
-                }
-            }
-        }
     }
 }
