@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -11,8 +12,19 @@ namespace WebRuler
     {
         private const int MaxThreads = 15;
 
+        private ConcurrentDictionary<string, byte> _visitedLinks;
+
+        public void ClearVisited()
+        {
+            _visitedLinks = new ConcurrentDictionary<string, byte>();
+        }
+
         public void Execute(String url, int depth, StreamWriter outWriter = null)
         {
+            if (_visitedLinks.ContainsKey(url))
+                return;
+            _visitedLinks[url] = 1;
+            
             string source;
             try
             {
@@ -41,6 +53,10 @@ namespace WebRuler
         
         public async Task ExecuteAsync(String url, int depth, StreamWriter outWriter = null)
         {
+            if (_visitedLinks.ContainsKey(url))
+                return;
+            _visitedLinks[url] = 1;
+            
             string source;
             try
             {

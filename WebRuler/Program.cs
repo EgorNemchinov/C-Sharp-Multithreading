@@ -21,6 +21,7 @@ namespace WebRuler
 
             using (StreamWriter outputFile = new StreamWriter(simplePath))
             {
+                parser.ClearVisited();
                 stopwatch.Start();
                 parser.Execute(url, depth, null);
                 stopwatch.Stop();
@@ -30,8 +31,9 @@ namespace WebRuler
 
             using (StreamWriter outputFile = new StreamWriter(parallelPath))
             {
+                parser.ClearVisited();
                 stopwatch.Restart();
-                parser.ExecuteAsync(url, depth, outputFile).Wait();
+                parser.ExecuteAsync(url, depth, null).Wait();
                 stopwatch.Stop();
                 Console.WriteLine("Finished parallel parsing.");
             }
