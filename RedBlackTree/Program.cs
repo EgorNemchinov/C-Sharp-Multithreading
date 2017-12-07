@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 
 namespace RedBlackTree
 {
@@ -15,36 +15,31 @@ namespace RedBlackTree
         {
             ParallelTree<int> tree = new ParallelTree<int>(new Tree<int>());
 
-            List<Task<bool>> tasks = new List<Task<bool>>();
             List<int> values = new List<int>() {0, 1, 2, -2, 10, 7, 4};
+            var operations = new List<TreeOperation<int>>();
 
             foreach (int value in values)
             {
-                tree.Insert(value);
+                operations.Add(tree.Insert(value));
             }
 
             foreach (int value in values)
             {
-                tree.Find(value);
+                operations.Add(tree.Find(value));
             }
             foreach (int value in values)
             {
-                tree.Remove(value);
+                operations.Add(tree.Remove(value));
             }
 
             Console.WriteLine("All operations are added.");
             tree.Exit(0).Wait();
             Console.WriteLine("All finished.\n");
 
-            Tree<int> wantedTree = new Tree<int>();
-            /*foreach (int value in values)
-            {
-                wantedTree.Insert(value);
-            }*/
+            Console.WriteLine("All operations succeded: " +
+                              operations.All(operation => operation.result));
 
             Console.WriteLine($"Tree is empty: {tree.GetTree().root == null}");
-            Console.WriteLine("Tree is the way we wanted: " +
-                              $"{tree.GetTree().Equals(wantedTree)}");
         }
     }
 }
