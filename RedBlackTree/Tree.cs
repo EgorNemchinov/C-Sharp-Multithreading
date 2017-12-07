@@ -13,7 +13,12 @@ namespace RedBlackTree
             this.root = root;
         }
 
-        public Node<V> Find(V value)
+        public bool Find(V value)
+        {
+            return FindNode(value) != null;
+        }
+        
+        public Node<V> FindNode(V value)
         {
             if (value == null)
             {
@@ -43,12 +48,12 @@ namespace RedBlackTree
             }
         }
 
-        public void Insert(V value)
+        public bool Insert(V value)
         {
             if (root == null)
             {
                 root = new Node<V>(value, isBlack: true);
-                return;
+                return true;
             }
             var currentNode = root;
             while (true)
@@ -76,18 +81,19 @@ namespace RedBlackTree
                 }
                 else
                 {
-                    Console.WriteLine("Trying to add value already contained in the tree");
-                    return;
+                    Console.WriteLine($"Trying to add value {value} already contained in the tree");
+                    return false;
                 }
             }
         Inserted:
             CorrectAfterInsertion(currentNode);
             root.isBlack = true;
+            return true;
         }
 
         public bool Remove(V value)
         {
-            var deletedNode = Find(value);
+            var deletedNode = FindNode(value);
             if (deletedNode == null)
             {
                 Console.WriteLine($"Value {value} is not in the tree.");
@@ -228,7 +234,7 @@ namespace RedBlackTree
             Case3(node);
         }
         
-         private void Case2Right(Node<V> node)
+        private void Case2Right(Node<V> node)
          {   
             var brother = node.Brother();
 
