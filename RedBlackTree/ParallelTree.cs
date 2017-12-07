@@ -9,9 +9,11 @@ namespace RedBlackTree
     {
         private Tree<V> tree;
         public volatile bool finished = false;
-        ConcurrentQueue<TreeOperation<V>> waitQueue = new ConcurrentQueue<TreeOperation<V>>();
 
-        ConcurrentDictionary<TreeOperation<V>, byte> runningTasks =
+        private ConcurrentQueue<TreeOperation<V>> waitQueue =
+            new ConcurrentQueue<TreeOperation<V>>();
+
+        private ConcurrentDictionary<TreeOperation<V>, byte> runningTasks =
             new ConcurrentDictionary<TreeOperation<V>, byte>();
 
         private volatile TreeOperation<V> lastRunning = null;
@@ -68,15 +70,11 @@ namespace RedBlackTree
             {
                 if (waitQueue.IsEmpty)
                     return;
+                
                 if (!waitQueue.TryPeek(out curOperation))
                 {
                     Logger.Log("Couldn't peek at wait queue.");
                     return;
-                }
-
-                if (curOperation == null)
-                {
-                    Logger.Log("CurOperation is null, waitqueue is empty though.");
                 }
 
                 Logger.Log($"Took element from waitqueue: {curOperation} ");
@@ -108,8 +106,10 @@ namespace RedBlackTree
                             Logger.Log("Unsuccesful dequeing.");
                             return;
                         }
+                        
                         if (runningTasks.ContainsKey(curOperation))
                             return;
+                        
                         curOperation.Run();
                         runningTasks[curOperation] = 1;
                         lastRunning = curOperation;
@@ -140,7 +140,7 @@ namespace RedBlackTree
         }
     }
 
-    abstract class TreeOperation<V> where V : IComparable<V>
+    internal abstract class TreeOperation<V> where V : IComparable<V>
     {
         public enum Type
         {
@@ -151,10 +151,11 @@ namespace RedBlackTree
         }
 
         public Type type;
+        protected Action action = () => { };
         public Task task;
         protected ParallelTree<V> tree;
         protected V value;
-        private volatile bool wasRun = false;
+        private volatile bool wasRun;
 
         protected TreeOperation(Type type, ParallelTree<V> tree, V value)
         {
@@ -168,8 +169,6 @@ namespace RedBlackTree
             return $"{type} {value}";
         }
 
-        protected abstract void Action();
-
         public virtual Task Run()
         {
             if (wasRun)
@@ -178,57 +177,45 @@ namespace RedBlackTree
             task = Task.Run(() =>
             {
                 Logger.Log($"Run {this}");
-                Action();
+                action();
                 tree.FinishOperation(this);
             });
             return task;
         }
     }
 
-    class InsertOperation<V> : TreeOperation<V> where V : IComparable<V>
+    internal class InsertOperation<V> : TreeOperation<V> where V : IComparable<V>
     {
         public InsertOperation(ParallelTree<V> tree, V value)
             : base(Type.Insert, tree, value)
         {
             Logger.Log("Created InsertOperation");
-        }
-
-        protected override void Action()
-        {
-            tree.GetTree().Insert(value);
+            action = () => tree.GetTree().Insert(value);
         }
     }
 
-    class FindOperation<V> : TreeOperation<V> where V : IComparable<V>
+    internal class FindOperation<V> : TreeOperation<V> where V : IComparable<V>
     {
         public FindOperation(ParallelTree<V> tree, V value)
             : base(Type.Find, tree, value)
         {
             Logger.Log("Created FindOperation");
-        }
-
-        protected override void Action()
-        {
-            tree.GetTree().Find(value);
+            action = () => tree.GetTree().Find(value);
         }
     }
 
-    class RemoveOperation<V> : TreeOperation<V> where V : IComparable<V>
+    internal class RemoveOperation<V> : TreeOperation<V> where V : IComparable<V>
     {
         public RemoveOperation(ParallelTree<V> tree, V value)
             : base(Type.Remove, tree, value)
         {
             Logger.Log("Created RemoveOperation");
-        }
-
-        protected override void Action()
-        {
-            tree.GetTree().Remove(value);
+            action = () => tree.GetTree().Remove(value);
         }
     }
 
 
-    class ExitOperation<V> : TreeOperation<V> where V : IComparable<V>
+    internal class ExitOperation<V> : TreeOperation<V> where V : IComparable<V>
     {
         public ExitOperation(ParallelTree<V> tree, V value)
             : base(Type.Exit, tree, value)
@@ -244,10 +231,6 @@ namespace RedBlackTree
         {
             task.RunSynchronously();
             return task;
-        }
-
-        protected override void Action()
-        {
         }
     }
 }
