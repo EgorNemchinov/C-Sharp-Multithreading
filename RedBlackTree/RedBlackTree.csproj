@@ -50,6 +50,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\NodeTests.cs" />
+    <Compile Include="Tests\ParallelTreeTests.cs" />
     <Compile Include="Tests\RemoveTests.cs" />
     <Compile Include="Tests\TreeTests.cs" />
     <Compile Include="Tree.cs" />
