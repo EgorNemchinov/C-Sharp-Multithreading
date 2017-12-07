@@ -22,7 +22,7 @@ namespace RedBlackTree
         {
             if (value == null)
             {
-                Console.WriteLine("Error: Value passed into Find() is null.");
+                Logger.Error("Value passed into Find() is null.");
                 return null;
             }
             if (root == null)
@@ -81,7 +81,7 @@ namespace RedBlackTree
                 }
                 else
                 {
-                    Console.WriteLine($"Trying to add value {value} already contained in the tree");
+                    Logger.Error($"Trying to add value {value} already contained in the tree");
                     return false;
                 }
             }
@@ -96,7 +96,7 @@ namespace RedBlackTree
             var deletedNode = FindNode(value);
             if (deletedNode == null)
             {
-                Console.WriteLine($"Value {value} is not in the tree.");
+                Logger.Error($"Value {value} is not in the tree.");
                 return false;                
             }
             return Remove(deletedNode);
@@ -162,7 +162,7 @@ namespace RedBlackTree
 
         private bool Remove(Node<V> node)
         {
-            Console.WriteLine($"Remove for {node.value}");
+            Logger.Log($"Remove for {node.value}");
             
             if (node.GetRight() != null && node.GetLeft() != null)
             {
@@ -361,7 +361,7 @@ namespace RedBlackTree
             var otherIterator = new BfsIterator<V>(other);
             
             if(this.root != null && other.root != null)
-                Console.Error.WriteLine($"Comparing trees with root {this.root.value} " +
+                Logger.Error($"Comparing trees with root {this.root.value} " +
                                         $"and {other.root.value}");
             
             while(thisIterator.hasNext() && otherIterator.hasNext())
@@ -369,19 +369,19 @@ namespace RedBlackTree
                 var thisNode = thisIterator.next();
                 var otherNode = otherIterator.next();
                 if(!thisNode.Equals(otherNode)) {
-                    Console.WriteLine($"Two nodes {thisNode.value} and {otherNode.value} differ." +
+                    Logger.Log($"Two nodes {thisNode.value} and {otherNode.value} differ." +
                                       $" Trees are not equal.");
-                    Console.WriteLine(thisNode);
-                    Console.WriteLine(otherNode);
-                    Console.WriteLine();
+                    Logger.Log(thisNode.ToString());
+                    Logger.Log(otherNode.ToString());
+                    Logger.Log();
                     return false;
                 }
             }
 
             if (thisIterator.hasNext() != otherIterator.hasNext())
             {
-                Console.WriteLine($"Trees have different sizes: {1} and {1}. Not equal.");
-                Console.WriteLine(thisIterator.hasNext() ? thisIterator.next().ToString() : 
+                Logger.Log($"Trees have different sizes: {1} and {1}. Not equal.");
+                Logger.Log(thisIterator.hasNext() ? thisIterator.next().ToString() : 
                                     otherIterator.next().ToString());
                 return false;                
             }

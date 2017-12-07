@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace RedBlackTree
@@ -33,9 +32,9 @@ namespace RedBlackTree
                 tree.Remove(value);
             }
 
-            Console.WriteLine("All added.\n");
+            Console.WriteLine("All operations are added.");
             tree.Exit(0).Wait();
-            Console.WriteLine("All finished.");
+            Console.WriteLine("All finished.\n");
 
             Tree<int> wantedTree = new Tree<int>();
             /*foreach (int value in values)

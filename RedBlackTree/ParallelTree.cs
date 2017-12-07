@@ -62,7 +62,7 @@ namespace RedBlackTree
                 return;
 
             TreeOperation<V> curOperation;
-            Console.WriteLine("\nRunOperations()");
+            Logger.Log("\nRunOperations()");
 
             do
             {
@@ -70,42 +70,42 @@ namespace RedBlackTree
                     return;
                 if (!waitQueue.TryPeek(out curOperation))
                 {
-                    Console.WriteLine("Couldn't peek at wait queue.");
+                    Logger.Log("Couldn't peek at wait queue.");
                     return;
                 }
 
                 if (curOperation == null)
                 {
-                    Console.WriteLine("CurOperation is null, waitqueue is empty though.");
+                    Logger.Log("CurOperation is null, waitqueue is empty though.");
                 }
 
-                Console.WriteLine($"Took element from waitqueue: {curOperation} ");
+                Logger.Log($"Took element from waitqueue: {curOperation} ");
 
                 if (runningTasks.IsEmpty)
                 {
-                    Console.WriteLine($"Running queue is empty, let's add element.");
+                    Logger.Log($"Running queue is empty, let's add element.");
 
                     if (!waitQueue.TryDequeue(out curOperation))
                     {
-                        Console.WriteLine("Unsuccesful dequeing.");
+                        Logger.Log("Unsuccesful dequeing.");
                         return;
                     }
                     curOperation.Run();
                     runningTasks[curOperation] = 1;
                     lastRunning = curOperation;
 
-                    Console.WriteLine($"Added operation: {curOperation}");
+                    Logger.Log($"Added operation: {curOperation}");
                 }
                 else
                 {
-                    Console.WriteLine($"Running queue is not empty, let's check.");
+                    Logger.Log($"Running queue is not empty, let's check.");
 
                     if (lastRunning?.type == TreeOperation<V>.Type.Find &&
                         curOperation.type == TreeOperation<V>.Type.Find)
                     {
                         if (!waitQueue.TryDequeue(out curOperation))
                         {
-                            Console.WriteLine("Unsuccesful dequeing.");
+                            Logger.Log("Unsuccesful dequeing.");
                             return;
                         }
                         if (runningTasks.ContainsKey(curOperation))
@@ -113,27 +113,27 @@ namespace RedBlackTree
                         curOperation.Run();
                         runningTasks[curOperation] = 1;
                         lastRunning = curOperation;
-                        Console.WriteLine($"Added operation: {curOperation}");
+                        Logger.Log($"Added operation: {curOperation}");
                     }
                     else
                     {
-                        Console.WriteLine("Finish RunOperations()\n");
+                        Logger.Log("Finish RunOperations()\n");
                         return;
                     }
                 }
             } while (!waitQueue.IsEmpty && !finished);
-            Console.WriteLine("Finish RunOperations()\n");
+            Logger.Log("Finish RunOperations()\n");
         }
 
         [MethodImpl(MethodImplOptions.Synchronized)]
         internal void FinishOperation(TreeOperation<V> operation)
         {
-            Console.WriteLine($"Finish {operation}");
+            Logger.Log($"Finish {operation}");
 
             byte val;
             if (!runningTasks.TryRemove(operation, out val))
             {
-                Console.WriteLine($"Unsuccesful deletion of {operation}");
+                Logger.Log($"Unsuccesful deletion of {operation}");
             }
             if (!finished)
                 RunOperations();
@@ -177,7 +177,7 @@ namespace RedBlackTree
             wasRun = true;
             task = Task.Run(() =>
             {
-                Console.WriteLine($"Run {this}");
+                Logger.Log($"Run {this}");
                 Action();
                 tree.FinishOperation(this);
             });
@@ -190,7 +190,7 @@ namespace RedBlackTree
         public InsertOperation(ParallelTree<V> tree, V value)
             : base(Type.Insert, tree, value)
         {
-            Console.WriteLine("Created InsertOperation");
+            Logger.Log("Created InsertOperation");
         }
 
         protected override void Action()
@@ -204,7 +204,7 @@ namespace RedBlackTree
         public FindOperation(ParallelTree<V> tree, V value)
             : base(Type.Find, tree, value)
         {
-            Console.WriteLine("Created FindOperation");
+            Logger.Log("Created FindOperation");
         }
 
         protected override void Action()
@@ -218,7 +218,7 @@ namespace RedBlackTree
         public RemoveOperation(ParallelTree<V> tree, V value)
             : base(Type.Remove, tree, value)
         {
-            Console.WriteLine("Created RemoveOperation");
+            Logger.Log("Created RemoveOperation");
         }
 
         protected override void Action()
@@ -235,7 +235,7 @@ namespace RedBlackTree
         {
             task = new Task(() =>
             {
-                Console.WriteLine("ExitTask executed");
+                Logger.Log("ExitTask executed");
                 tree.finished = true;
             });
         }

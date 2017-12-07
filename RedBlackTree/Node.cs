@@ -27,7 +27,6 @@ namespace RedBlackTree
         public void RotateLeft() {
             if(this.GetRight() == null)
                 return;
-//            Logger.debugInfo("rotateLeft() executed for $this")
             var rightChild = this.GetRight();
             var floatingNode = rightChild.GetLeft(); //this will later become right child of this node;
             this.SetParentsReferenceTo(rightChild); //linking node's parent to node's right child
@@ -42,7 +41,6 @@ namespace RedBlackTree
             this.SetParentsReferenceTo(leftChild);
             leftChild.SetRight(this);
             SetLeft(floatingNode);
-//            Logger.debugInfo("rotateRight() executed for $this")
         }
 
         public void SetParentsReferenceTo(Node<V> newChild)
@@ -56,7 +54,7 @@ namespace RedBlackTree
             else if(IsRightChild())
                 parent.SetRight(newChild);
             else 
-                Console.WriteLine("Incorrect SetParentsReferenceTo() call." +
+                Logger.Error("Incorrect SetParentsReferenceTo() call." +
                                   " Current node is not child of it's parent.");
             parent = null;
         }
