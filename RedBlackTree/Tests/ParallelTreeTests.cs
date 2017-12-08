@@ -59,7 +59,7 @@ namespace RedBlackTree.Tests
         [Test]
         public void InsertsRemovesValidity()
         {
-            var values = InitValues(10000, unique: false);
+            var values = InitValues(100000, unique: false);
             var parallelTree = new ParallelTree<int>(new Tree<int>());
             var simpleTree = new Tree<int>();
 
@@ -76,6 +76,34 @@ namespace RedBlackTree.Tests
             parallelTree.Exit(0).Wait();
 
             Assert.AreEqual(simpleTree, parallelTree.GetTree());
+        }
+
+        [Test]
+        public void OperationsReturnValueCheck()
+        {
+            var map = new Dictionary<TreeOperation<int>, bool>();
+            var values = InitValues(100000, unique: false);
+            var parallelTree = new ParallelTree<int>(new Tree<int>());
+            var simpleTree = new Tree<int>();
+
+            foreach (int value in values)
+            {
+                map[parallelTree.Insert(value)] = simpleTree.Insert(value);
+            }
+            for (int i = 0; i < 10000; i++)
+            {
+                map[parallelTree.Remove(values[i])] = simpleTree.Remove(values[i]);
+            }
+            foreach (int value in values)
+            {
+                map[parallelTree.Find(value)] = simpleTree.Find(value);
+            }
+            parallelTree.Exit(0).Wait();
+
+            Assert.AreEqual(simpleTree, parallelTree.GetTree());
+
+            var equal = map.Keys.All((key) => map[key] == key.result);
+            Assert.IsTrue(equal);
         }
     }
 }
