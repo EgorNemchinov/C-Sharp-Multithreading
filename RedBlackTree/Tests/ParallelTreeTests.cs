@@ -57,6 +57,27 @@ namespace RedBlackTree.Tests
         }
 
         [Test]
+        public void InsertRemoveMix()
+        {
+            var values = InitValues(10000, unique: true);
+
+            var operations = new List<TreeOperation<int>>(50000);
+
+            var tree = new ParallelTree<int>(new Tree<int>());
+
+            foreach (int value in values)
+            {
+                operations.Add(tree.Insert(value));
+                operations.Add(tree.Remove(value));
+            }
+            tree.Exit(0).Wait();
+
+            Assert.AreEqual(new Tree<int>(), tree.GetTree());
+
+            Assert.IsTrue(operations.All((operation) => operation.result));
+        }
+
+        [Test]
         public void InsertsRemovesValidity()
         {
             var values = InitValues(100000, unique: false);
