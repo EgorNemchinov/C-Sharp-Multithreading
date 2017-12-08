@@ -10,8 +10,6 @@ namespace WebRuler
 {
     public class WebParser
     {
-        private const int MaxThreads = 15;
-
         private ConcurrentDictionary<string, byte> _visitedLinks;
 
         public void ClearVisited()
@@ -78,14 +76,11 @@ namespace WebRuler
         
             
             var tasks = new Task[links.Count];
-            Parallel.For(0, links.Count, new ParallelOptions()
-            {
-                MaxDegreeOfParallelism = MaxThreads
-            }, ind =>
+            for (int ind = 0; ind < links.Count; ind++)
             {
                 var index = ind;
                 tasks[index] = ExecuteAsync(links[index], depth - 1, outWriter);
-            });
+            }
             Task.WhenAll(tasks).Wait();
         }
 
