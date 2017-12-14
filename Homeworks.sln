@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MD5Hash", "MD5Hash\MD5Hash.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebRuler", "WebRuler\WebRuler.csproj", "{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapshots", "Snapshots\Snapshots.csproj", "{C79F51FF-4E52-423D-BEF9-C68CE89FCA27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E35C03C7-4B5F-4246-8A3E-9EAA1192D859}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C79F51FF-4E52-423D-BEF9-C68CE89FCA27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C79F51FF-4E52-423D-BEF9-C68CE89FCA27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C79F51FF-4E52-423D-BEF9-C68CE89FCA27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C79F51FF-4E52-423D-BEF9-C68CE89FCA27}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
