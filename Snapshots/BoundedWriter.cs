@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Snapshots
 {
@@ -10,6 +13,9 @@ namespace Snapshots
         private Register[] regs;
         private bool[,] q;
         private IEnumerable<int> range;
+
+        private ConcurrentDictionary<int, string> events;
+        private int eventCounter;
 
         class Register
         {
@@ -38,9 +44,20 @@ namespace Snapshots
             regs = new Register[RegistersAmount];
             q = new bool[RegistersAmount, RegistersAmount];
             range = Enumerable.Range(0, RegistersAmount - 1);
+            events = new ConcurrentDictionary<int, string>();
 
             for (int i = 0; i < RegistersAmount; i++)
                 regs[i] = new Register(RegistersAmount);
+        }
+
+        public int[] Read(int regId)
+        {
+            events[Interlocked.Increment(ref eventCounter)] =
+                $"Starting Scan() from process {regId}";
+            var snapshot = Scan(regId);
+            events[Interlocked.Increment(ref eventCounter)] =
+                $"Take snapshot [{string.Join(", ", snapshot)}] from process {regId}";
+            return snapshot;
         }
 
         private int[] Scan(int i)
@@ -59,7 +76,7 @@ namespace Snapshots
                            a[j].p[i] == q[i, j] &
                            a[j].toggle == b[j].toggle
                 );
-                
+
                 if (allUnchanged)
                 {
                     return b.Select((reg) => reg.value).ToArray();
@@ -67,11 +84,11 @@ namespace Snapshots
                 else
                 {
                     var changedRegs = range.Where(
-                        (j) => a[j].p[i] != q[i, j] ||
-                        a[j].p[i] != q[i, j] ||
-                        a[j].toggle != b[j].toggle)
+                            (j) => a[j].p[i] != q[i, j] ||
+                                   a[j].p[i] != q[i, j] ||
+                                   a[j].toggle != b[j].toggle)
                         .ToList();
-                    
+
                     foreach (var j in changedRegs)
                     {
                         if (moved[j] == 1)
@@ -86,13 +103,18 @@ namespace Snapshots
         public void Update(int i, int value)
         {
             bool[] f = new bool[RegistersAmount];
-            
+
             for (int j = 0; j < RegistersAmount; j++)
                 f[j] = !q[j, i];
-            
+
             var snapshot = Scan(i);
 
+            /*events[Interlocked.Increment(ref eventCounter)] =
+                $"Save snapshot [{string.Join(", ", snapshot)}] to reg {i}";
+            */
             regs[i].Update(value, f, snapshot);
+            events[Interlocked.Increment(ref eventCounter)] =
+                $"Change reg {i} to {value}";
         }
 
         private Register[] Collect()
@@ -100,6 +122,16 @@ namespace Snapshots
             Register[] result = new Register[RegistersAmount];
             regs.CopyTo(result, 0);
             return result;
+        }
+
+        public void PrintResults()
+        {
+            var keys = events.Keys.ToList();
+            keys.Sort();
+            foreach (var key in keys)
+            {
+                Console.WriteLine(events[key]);
+            }
         }
     }
 }
