@@ -54,10 +54,23 @@ namespace Snapshots
         {
             events[Interlocked.Increment(ref eventCounter)] =
                 $"Starting Scan() from process {regId}";
+            
             var snapshot = Scan(regId);
+            
             events[Interlocked.Increment(ref eventCounter)] =
                 $"Take snapshot [{string.Join(", ", snapshot)}] from process {regId}";
+            
             return snapshot;
+        }
+        
+        public void PrintResults()
+        {
+            var keys = events.Keys.ToList();
+            keys.Sort();
+            foreach (var key in keys)
+            {
+                Console.WriteLine(events[key]);
+            }
         }
 
         private int[] Scan(int i)
@@ -68,6 +81,7 @@ namespace Snapshots
             {
                 for (int j = 0; j < RegistersAmount; j++)
                     q[i, j] = regs[j].p[i];
+                
                 var a = Collect();
                 var b = Collect();
 
@@ -109,10 +123,8 @@ namespace Snapshots
 
             var snapshot = Scan(i);
 
-            /*events[Interlocked.Increment(ref eventCounter)] =
-                $"Save snapshot [{string.Join(", ", snapshot)}] to reg {i}";
-            */
             regs[i].Update(value, f, snapshot);
+            
             events[Interlocked.Increment(ref eventCounter)] =
                 $"Change reg {i} to {value}";
         }
@@ -122,16 +134,6 @@ namespace Snapshots
             Register[] result = new Register[RegistersAmount];
             regs.CopyTo(result, 0);
             return result;
-        }
-
-        public void PrintResults()
-        {
-            var keys = events.Keys.ToList();
-            keys.Sort();
-            foreach (var key in keys)
-            {
-                Console.WriteLine(events[key]);
-            }
         }
     }
 }
